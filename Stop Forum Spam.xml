@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin name="Stop Forum Spam" version_long="10000" version_human="1.0.0" author="Sijad aka Mr.Wosi" website="http://skinod..com" update_check="http://skinod.com/updatechk/stopforumspam"><hooks><hook type="C" class="\IPS\Member"><![CDATA[//<?php
+
+class hook50 extends _HOOK_CLASS_
+{
+	public function spamService( $type='register' ) {
+		try
+		{
+	
+			if(\IPS\Settings::i()->sod_stop_forum_spam_active) {
+				$query = array('f' => 'json');
+	
+				if(\IPS\Settings::i()->sod_stop_forum_spam_check_ip) {
+					$query['username'] = $this->name;
+				}
+	
+				if(\IPS\Settings::i()->sod_stop_forum_spam_check_email) {
+					$query['email'] = $this->email;
+				}
+	
+				if(\IPS\Settings::i()->sod_stop_forum_spam_check_ip) {
+					$query['ip'] = $this->ip;
+				}
+	
+				$url = \IPS\Http\Url::external( "http://api.stopforumspam.org/api" )->setQueryString( $query );				
+				$response = $url->request()->get()->decodeJson();
+	
+				if($response['success']) {
+					if(
+						(isset($response['username']) && $response['username']['appears']) ||
+						(isset($response['email']) && $response['email']['appears']) ||
+						(isset($response['ip']) && $response['ip']['appears'])
+						)
+						switch(\IPS\Settings::i()->sod_stop_forum_spam_action) {
+							case 'admin_approval':
+								\IPS\Settings::i()->reg_auth_type = 'admin';
+							break;
+							case 'ban':
+								$this->temp_ban = -1;
+								$this->members_bitoptions['bw_is_spammer'] = TRUE;
+							break;
+							case 'deny':
+								\IPS\Output::i()->error( 'spam_denied_account', '2S129/1', 403, '' );
+							break;
+						}
+				}
+			}
+	
+			return parent::spamService( $type );
+		}
+		catch ( \RuntimeException $e )
+		{
+			return call_user_func_array( 'parent::' . __FUNCTION__, func_get_args() );
+		}
+	}
+}]]></hook></hooks><settings><setting><key>sod_stop_forum_spam_active</key><default>0</default></setting><setting><key>sod_stop_forum_spam_check_email</key><default>1</default></setting><setting><key>sod_stop_forum_spam_check_ip</key><default>1</default></setting><setting><key>sod_stop_forum_spam_check_username</key><default>1</default></setting><setting><key>sod_stop_forum_spam_action</key><default>admin_approval</default></setting></settings><settingsCode><![CDATA[//<?php
+
+$form->add( new \IPS\Helpers\Form\YesNo( 'sod_stop_forum_spam_active', \IPS\Settings::i()->sod_stop_forum_spam_active ) );
+$form->add( new \IPS\Helpers\Form\YesNo( 'sod_stop_forum_spam_check_email', \IPS\Settings::i()->sod_stop_forum_spam_check_email ) );
+$form->add( new \IPS\Helpers\Form\YesNo( 'sod_stop_forum_spam_check_ip', \IPS\Settings::i()->sod_stop_forum_spam_check_ip ) );
+$form->add( new \IPS\Helpers\Form\YesNo( 'sod_stop_forum_spam_check_username', \IPS\Settings::i()->sod_stop_forum_spam_check_username ) );
+$form->add( new \IPS\Helpers\Form\Select( 'sod_stop_forum_spam_action', \IPS\Settings::i()->sod_stop_forum_spam_action, false, array( 'options' => array('admin_approval' => 'sod_stop_forum_spam_admin_approval', 'ban' => 'sod_stop_forum_spam_ban', 'deny' => 'sod_stop_forum_spam_deny'), 'multiple' => false ) ) );
+
+
+if ( $values = $form->values() )
+{
+	$form->saveAsSettings();
+	return TRUE;
+}
+
+return $form;]]></settingsCode><htmlFiles/><cssFiles/><jsFiles/><resourcesFiles/><lang><word key="sod_stop_forum_spam_active" js="0">Active Stop Forum Spam</word><word key="sod_stop_forum_spam_check_email" js="0">Check User Email</word><word key="sod_stop_forum_spam_check_username" js="0">Check Username</word><word key="sod_stop_forum_spam_check_ip" js="0">Check User IP</word><word key="sod_stop_forum_spam_action" js="0">Action</word><word key="sod_stop_forum_spam_admin_approval" js="0">Admin Approval</word><word key="sod_stop_forum_spam_ban" js="0">Approve And Ban User</word><word key="sod_stop_forum_spam_deny" js="0">Deny Registration</word></lang><versions><version long="10000" human="1.0.0"><![CDATA[//<?php
+
+
+/* To prevent PHP errors (extending class does not exist) revealing path */
+if ( !defined( '\IPS\SUITE_UNIQUE_KEY' ) )
+{
+	header( ( isset( $_SERVER['SERVER_PROTOCOL'] ) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0' ) . ' 403 Forbidden' );
+	exit;
+}
+
+/**
+ * Install Code
+ */
+class ips_plugins_setup_install
+{
+	/**
+	 * ...
+	 *
+	 * @return	array	If returns TRUE, upgrader will proceed to next step. If it returns any other value, it will set this as the value of the 'extra' GET parameter and rerun this step (useful for loops)
+	 */
+	public function step1()
+	{
+		
+	}
+	
+	// You can create as many additional methods (step2, step3, etc.) as is necessary.
+	// Each step will be executed in a new HTTP request
+}]]></version></versions></plugin>
