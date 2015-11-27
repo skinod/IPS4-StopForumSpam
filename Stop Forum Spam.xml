@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin name="Stop Forum Spam" version_long="10000" version_human="1.0.0" author="Sijad aka Mr.Wosi" website="http://skinod..com" update_check="http://skinod.com/updatechk/stopforumspam"><hooks><hook type="C" class="\IPS\Member"><![CDATA[//<?php
+<plugin name="Stop Forum Spam" version_long="10000" version_human="1.0.0" author="Sijad aka Mr.Wosi" website="http://skinod.com" update_check="http://skinod.com/updatechk/stopforumspam"><hooks><hook type="C" class="\IPS\Member"><![CDATA[//<?php
 
 class hook50 extends _HOOK_CLASS_
 {
